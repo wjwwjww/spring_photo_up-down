@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and Select Image</title>
+</head>
+<body>
+<select id="User"></select>
+<button id="confirm">confirm</button>
+
+<h2>upload image</h2>
+<form id="uploadForm" enctype="multipart/form-data">
+    <label for="file">Select an image:</label>
+    <input type="file" id="file" name="file" accept="image/*" required>
+    <button type="submit">Upload</button>
+</form>
+<img id="image"   alt="img">
+<script>
+    // Fetch the list of users from the server
+    fetch('/all')
+        .then(response => response.json()) // assuming the server responds with JSON data
+        .then(data => {
+            const selectElement = document.getElementById('User');
+
+            // Loop through each user in the fetched data
+            data.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id; // Assuming each user has an 'id' field
+                option.textContent = user.username; // Assuming each user has a 'name' field
+                selectElement.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching users:', error);
+        });
+
+    //确定用户
+    document.getElementById('confirm').addEventListener('click', function (e) {
+        const confirm = document.getElementById('confirm');
+        const newText = document.createElement('p');
+        newText.id="new"
+        newText.textContent = "You selected user: " + document.getElementById('User').value;
+        const id=document.getElementById('User').value;
+        loadImage(id);
+        confirm.parentNode.insertBefore(newText, confirm.nextSibling);
+    });
+
+    function loadImage(id) {
+        const userId = id;
+        console.log(id);
+        if (userId) {
+            // Set the src attribute of the image tag to the download endpoint with the user ID as a query parameter
+            document.getElementById('image').src = `/common/download?id=${userId}`;
+            // console.log(document.getElementById())
+        } else {
+            alert('Please enter a valid User ID.');
+        }
+    }
+
+
+
+
+    //上传图片
+    document.getElementById('uploadForm').addEventListener('submit',function (e){
+        e.preventDefault(); // Prevent form from submitting the usual way
+        const fileInput=document.getElementById('file')
+        const formData = new FormData();
+        formData.append('id',document.getElementById('User').value)
+        formData.append('file', fileInput.files[0]); // Append the file to FormData
+        console.log(formData)
+        fetch('/common/upload', {
+            method: 'POST',
+            body: formData
+        }) .then(response => response.json())
+            .then(data => {
+                alert('File uploaded successfully! File name: ' + data.content);
+            })
+            .catch(error => {
+                console.error('Error uploading file:', error);
+                alert('Upload failed!');
+            });
+    })
+</script>
+</body>
+</html>
